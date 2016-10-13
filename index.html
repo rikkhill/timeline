@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timeline Demo</title>
+</head>
+
+<style>
+
+.happening .period {
+    rx: 2px;
+    ry: 2px;
+}
+
+</style>
+
+<body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script type="text/javascript">
+
+// Example data
+
+example_data = [
+    {
+        id: "12345",
+        timeline: "phil",
+        start: -2184289846,
+        end: undefined
+    },
+    {
+        id: "12345",
+        timeline: "phil",
+        start: -1553137846,
+        end:  -1395371446
+    }
+]
+
+// Dimensions
+var margin = {top: 10, right: 30, bottom: 30, left: 30},
+    width = 960 - margin.left - margin.right,
+    height = 960 - margin.top - margin.bottom;
+
+var x = d3.scaleLinear()
+    .range([0, width]);
+
+var y = d3.scaleTime()
+    .domain([new Date(1885, 0, 1), new Date(1975, 0, 1)])
+    .rangeRound([0, height]);
+
+// Main SVG element
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// The timeline
+var timeline = svg.append("g")
+    .attr("class", "axis axis--y")
+    .call(d3.axisLeft(y));
+
+// The data
+var happenings = svg.selectAll(".happening")
+    .data(example_data)
+    .enter().append("g")
+    .attr("class", "happening")
+    .attr("transform", function(d) {
+        var start_date = new Date(d.start * 1000);
+        var start_year = y(start_date);
+        console.log(start_date.getFullYear(), start_year);
+        return "translate(" + "20" + "," + start_year + ")";
+    });
+
+happenings.append("rect")
+    .attr("class", "period")
+    .attr("x", 1)
+    .attr("width", 15)
+    .attr("height", function(d) { return d.end ? y(new Date(d.end * 1000)) - y(new Date(d.start * 1000)) : 10 } );
+
+</script>
+</body>
+</html>
