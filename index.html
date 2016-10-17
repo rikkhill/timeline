@@ -6,9 +6,27 @@
 
 <style>
 
+.happening {
+    fill-opacity: 0.6;
+}
+
+.happening:hover {
+    fill-opacity: 1.0;
+}
+
 .happening .period {
     rx: 2px;
     ry: 2px;
+}
+
+.axis--x .domain {
+    stroke: none;
+}
+
+.axis--x > .tick > line {
+    stroke: grey;
+    stroke-width: 2px;
+    opacity: 0.5;
 }
 
 </style>
@@ -28,6 +46,30 @@ example_data = [
     },
     {
         id: "12345",
+        timeline: "john",
+        start: -2104289846,
+        end: undefined
+    },
+    {
+        id: "12345",
+        timeline: "colin",
+        start: -2184289846,
+        end: undefined
+    },
+    {
+        id: "12345",
+        timeline: "colin",
+        start: -2394289846,
+        end: -2114289846
+    },
+    {
+        id: "12345",
+        timeline: "colin",
+        start: -1994289846,
+        end: -1814289846
+    },
+    {
+        id: "12345",
         timeline: "phil",
         start: -1553137846,
         end:  -1395371446
@@ -35,46 +77,85 @@ example_data = [
 ]
 
 // Dimensions
-var margin = {top: 10, right: 30, bottom: 30, left: 30},
-    width = 960 - margin.left - margin.right,
+var margin = {top: 30, right: 30, bottom: 30, left: 30},
+    width = 460 - margin.left - margin.right,
     height = 960 - margin.top - margin.bottom;
 
-var x = d3.scaleLinear()
-    .range([0, width]);
+var innerMargin = 20;
+
+var x = d3.scalePoint();
 
 var y = d3.scaleTime()
     .domain([new Date(1885, 0, 1), new Date(1975, 0, 1)])
-    .rangeRound([0, height]);
+    .rangeRound([0 + innerMargin, height - innerMargin]);
 
 // Main SVG element
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
-  .append("g")
+    .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // The timeline
-var timeline = svg.append("g")
+var yAxis = svg.append("g")
     .attr("class", "axis axis--y")
     .call(d3.axisLeft(y));
+
+// Preprocess timeline data
+
+var colours = d3.schemeCategory10;
+var cols = {};
+example_data.forEach(function(c, i, a) { cols[c.timeline] = colours[i]; });
+
+col_list = Object.keys(cols);
+
+x.domain(col_list)
+    .range([0 + innerMargin, width - innerMargin]);
+
+var xAxis = svg.append("g")
+    .attr("class", "axis axis--x gridline")
+    .attr("transform", "translate(15," + (innerMargin) + ")")
+    .call(d3.axisTop(x).tickSize(-height).tickFormat(function(t) {return t.toUpperCase()}));
+
+
+
+// Columns
+
+/*
+
+col_list.forEach(function(c, i, a) {
+    svg.append("text")
+    .attr("x", x(c) + 15)
+    .attr("y", 0)
+    .attr("text-anchor", "middle")
+    .text(c.toUpperCase());
+});*/
 
 // The data
 var happenings = svg.selectAll(".happening")
     .data(example_data)
     .enter().append("g")
-    .attr("class", "happening")
+    .attr("class", function(d) { return "happening " + (d.end ? "period" : "event"); } )
     .attr("transform", function(d) {
         var start_date = new Date(d.start * 1000);
         var start_year = y(start_date);
-        console.log(start_date.getFullYear(), start_year);
-        return "translate(" + "20" + "," + start_year + ")";
+        var x_offset = x(d.timeline);
+        return "translate(" + (x_offset + 10) + "," + start_year + ")";
     });
 
-happenings.append("rect")
-    .attr("class", "period")
-    .attr("x", 1)
-    .attr("width", 15)
-    .attr("height", function(d) { return d.end ? y(new Date(d.end * 1000)) - y(new Date(d.start * 1000)) : 10 } );
+peroids = svg.selectAll(".happening.period")
+    .append("rect")
+    .attr("x", 0)
+    .attr("width", 11)
+    .attr("height", function(d) { return d.end ? y(new Date(d.end * 1000)) - y(new Date(d.start * 1000)) : 10 } )
+    .attr("fill", function(d) { return cols[d.timeline]; } );
+
+events = svg.selectAll(".happening.event")
+    .append("ellipse")
+    .attr("cx", 5)
+    .attr("rx", 18)
+    .attr("ry", 8)
+    .attr("fill", function(d) { return cols[d.timeline]; } );
 
 </script>
 </body>
